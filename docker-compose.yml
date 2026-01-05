@@ -15,10 +15,9 @@ services:
       - NODE_ENV=production
       # Google Calendar Integration (Optional)
       - GOOGLE_ACCESS_TOKEN=${GOOGLE_ACCESS_TOKEN}
-      # Required only if you want auto-refresh 
-      # - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
-      # - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      # - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     volumes:
       # Mount a local directory to persist the SQLite database
       - ./data:/app/db
