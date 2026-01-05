@@ -4,6 +4,8 @@
 
 ![Tenet App Screenshot](https://via.placeholder.com/1200x600?text=Tenet+Application+Preview)
 
+> **⚠️ Disclaimer**: This application has been "vibe coded" using **AntiGravity**. Code quality may be sub-optimal, but the vibes are immaculate. Use at your own risk.
+
 ## ✨ Features
 
 *   **Timeboxing Interface**: visually plan your day by dragging tasks onto a timeline.
