@@ -88,9 +88,25 @@ export async function deleteTask(id: string) {
     revalidatePath('/')
 }
 
+import { google } from 'googleapis'
+
+function getOAuth2Client() {
+    const clientId = process.env.GOOGLE_CLIENT_ID
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+    const refreshToken = process.env.GOOGLE_REFRESH_TOKEN
+
+    if (!clientId || !clientSecret || !refreshToken) {
+        return null
+    }
+
+    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret)
+    oauth2Client.setCredentials({ refresh_token: refreshToken })
+    return oauth2Client
+}
+
 export async function getGoogleCalendarEvents(date: string) {
-    const token = process.env.GOOGLE_ACCESS_TOKEN
-    if (!token) return []
+    const auth = getOAuth2Client()
+    if (!auth) return []
 
     const timeMin = new Date(date)
     timeMin.setHours(0, 0, 0, 0)
@@ -98,30 +114,51 @@ export async function getGoogleCalendarEvents(date: string) {
     timeMax.setHours(23, 59, 59, 999)
 
     try {
-        const params = new URLSearchParams({
+        const calendar = google.calendar({ version: 'v3', auth })
+        const res = await calendar.events.list({
+            calendarId: 'primary',
             timeMin: timeMin.toISOString(),
             timeMax: timeMax.toISOString(),
-            singleEvents: 'true',
+            singleEvents: true,
             orderBy: 'startTime'
         })
 
-        const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${params.toString()}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
-            cache: 'no-store'
-        })
-
-        if (!res.ok) {
-            console.error("Failed to fetch Google Calendar events", await res.text())
-            // Return empty array for now instead of throwing to avoid crashing page
-            return []
-        }
-
-        const data = await res.json()
-        return data.items || []
+        return res.data.items || []
     } catch (e) {
         console.error("Error fetching Google Calendar events", e)
         return []
+    }
+}
+
+export async function pushTaskToCalendar(taskId: string) {
+    const task = await db.task.findUnique({ where: { id: taskId } })
+    if (!task || !task.scheduledDate || !task.scheduledStartTime) {
+        throw new Error("Task not scheduled properly")
+    }
+
+    const auth = getOAuth2Client()
+    if (!auth) throw new Error("Google Calendar not configured")
+
+    const [h, m] = task.scheduledStartTime.split(':').map(Number)
+    const startDateTime = new Date(task.scheduledDate)
+    startDateTime.setHours(h, m, 0, 0)
+
+    const endDateTime = new Date(startDateTime.getTime() + task.estimatedMinutes * 60000)
+
+    try {
+        const calendar = google.calendar({ version: 'v3', auth })
+        await calendar.events.insert({
+            calendarId: 'primary',
+            requestBody: {
+                summary: task.title,
+                description: task.notes || undefined,
+                start: { dateTime: startDateTime.toISOString() },
+                end: { dateTime: endDateTime.toISOString() }
+            }
+        })
+        return { success: true }
+    } catch (e) {
+        console.error("Error pushing to calendar", e)
+        return { success: false, error: "Failed to push to calendar" }
     }
 }

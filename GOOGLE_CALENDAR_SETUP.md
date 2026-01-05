@@ -1,6 +1,6 @@
 # Google Calendar Setup
 
-To enable Google Calendar integration in Timeboxer, you need to set up a Google Cloud Project and obtain an OAuth Access Token.
+To enable Google Calendar integration in Tenet, you need to set up a Google Cloud Project and obtain an OAuth Access Token.
 
 ## Prerequisites
 

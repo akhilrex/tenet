@@ -5,8 +5,9 @@ import { Planner } from "@/components/planner"
 
 export const dynamic = 'force-dynamic'
 
-export default async function Page({ searchParams }: { searchParams: { date?: string } }) {
-  let dateStr = searchParams.date
+export default async function Page({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
+  const params = await searchParams
+  let dateStr = params.date
 
   if (!dateStr) {
     const now = new Date()

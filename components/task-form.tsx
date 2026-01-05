@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { createTask, updateTask, Task, createTag, getTags, Tag } from "@/app/actions"
-import { Plus } from "lucide-react"
+import { createTask, updateTask, Task, createTag, getTags, Tag, pushTaskToCalendar } from "@/app/actions"
+import { Plus, Calendar } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { toast } from "sonner"
 
 interface TaskFormProps {
     task?: Task
@@ -35,7 +36,7 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
     const [internalOpen, setInternalOpen] = useState(false)
     const [title, setTitle] = useState(task?.title || "")
     const [notes, setNotes] = useState(task?.notes || "")
-    const [estimatedMinutes, setEstimatedMinutes] = useState(task?.estimatedMinutes || 30)
+    const [estimatedMinutes, setEstimatedMinutes] = useState(task?.estimatedMinutes || 60)
 
     // Scheduled state
     const [scheduledDate, setScheduledDate] = useState(task?.scheduledDate || defaultDate || "")
@@ -58,6 +59,20 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
         getTags().then(setTags)
     }, [])
 
+    const handlePushToCalendar = async () => {
+        if (!task) return
+        if (confirm("Push this task to your Google Calendar?")) {
+            const loadingToast = toast.loading("Pushing to calendar...")
+            const res = await pushTaskToCalendar(task.id)
+            toast.dismiss(loadingToast)
+            if (res.success) {
+                toast.success("Pushed to calendar!")
+            } else {
+                toast.error("Failed to push: " + (res.error || "Unknown error"))
+            }
+        }
+    }
+
     const handleCreateTag = async () => {
         if (!newTagName) return
         await createTag(newTagName, newTagColor)
@@ -65,7 +80,7 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
         setTags(updatedTags)
 
         // Auto select the new tag
-        const newTag = updatedTags.find(t => t.name === newTagName)
+        const newTag = updatedTags.find((t: Tag) => t.name === newTagName)
         if (newTag) setSelectedTagId(newTag.id)
 
         setNewTagName("")
@@ -94,7 +109,7 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
             if (!task) {
                 setTitle("")
                 setNotes("")
-                setEstimatedMinutes(30)
+                setEstimatedMinutes(60)
                 setScheduledDate(defaultDate || "")
                 setScheduledStartTime(defaultTime || "")
                 setSelectedTagId(null)
@@ -214,6 +229,11 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
                         />
                     </div>
                     <div className="flex justify-end gap-2">
+                        {task && task.scheduledDate && task.scheduledStartTime && (
+                            <Button type="button" variant="outline" size="icon" onClick={handlePushToCalendar} title="Push to Google Calendar">
+                                <Calendar className="h-4 w-4" />
+                            </Button>
+                        )}
                         <div className="flex-1" />
                         <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
                         <Button type="submit">{task ? "Save Changes" : "Create Task"}</Button>

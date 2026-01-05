@@ -2,11 +2,12 @@
 
 import { Card } from "@/components/ui/card"
 import { Task, updateTask, deleteTask } from "@/app/actions"
-import { cn } from "@/lib/utils"
+import { cn, formatTimeRange } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Trash2 } from "lucide-react"
 import { useState } from "react"
 import { Button } from "./ui/button"
+import { toast } from "sonner"
 
 interface TaskBlockProps {
     task: Task
@@ -27,6 +28,7 @@ export function TaskBlock({ task, isOverlay, className, style, onClick }: TaskBl
         e.stopPropagation()
         if (confirm("Delete this task?")) {
             await deleteTask(task.id)
+            toast.success("Task deleted")
         }
     }
 
@@ -40,15 +42,15 @@ export function TaskBlock({ task, isOverlay, className, style, onClick }: TaskBl
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             className={cn(
-                "p-2 text-xs font-medium cursor-grab active:cursor-grabbing hover:ring-2 ring-primary/50 transition-all text-card-foreground border-l-4 relative group",
-                task.isCompleted && "line-through opacity-50 border-l-muted-foreground",
+                "p-2 text-xs font-medium cursor-grab active:cursor-grabbing hover:ring-2 ring-primary/50 transition-all text-card-foreground border rounded-md relative group shadow-sm",
+                task.isCompleted && "line-through opacity-50 border-muted-foreground",
                 isOverlay && "shadow-xl rotate-2 scale-105 z-50",
                 className
             )}
             style={{
                 ...style,
-                borderLeftColor: task.isCompleted ? undefined : borderColor,
-                // If we had proper hex utility we could do bg overrides. For now keep simple card bg.
+                borderColor: task.isCompleted ? undefined : (task.tag ? task.tag.color : undefined),
+                // borderLeftColor is handled by className usually, but we overwrite here
             }}
         >
             <div className="flex items-start gap-2">
@@ -61,9 +63,21 @@ export function TaskBlock({ task, isOverlay, className, style, onClick }: TaskBl
                     />
                 )}
                 <div className="flex-1 min-w-0">
-                    <div className="truncate">{task.title}</div>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                        <div className="truncate font-semibold">{task.title}</div>
+                        {task.scheduledStartTime && (
+                            <div className="text-[10px] opacity-60 whitespace-nowrap">
+                                {formatTimeRange(task.scheduledStartTime, task.estimatedMinutes)}
+                                <span className="ml-1 opacity-70">({task.estimatedMinutes}m)</span>
+                            </div>
+                        )}
+                    </div>
+                    {task.notes && (
+                        <div className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-tight">
+                            {task.notes}
+                        </div>
+                    )}
                     <div className="flex items-center gap-1 mt-0.5">
-                        {task.estimatedMinutes && <div className="text-[10px] opacity-70">{task.estimatedMinutes}m</div>}
                         {task.tag && (
                             <span
                                 className="text-[9px] px-1 rounded-sm text-white"

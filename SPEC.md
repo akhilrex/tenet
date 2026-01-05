@@ -1,4 +1,4 @@
-# Timeboxer - Daily Planner App
+# Tenet - Daily Planner App
 
 ## Product Overview
 
@@ -297,8 +297,8 @@ GOOGLE_CLIENT_SECRET=xxx            # For token refresh
 ### Local (Pi)
 
 ```bash
-docker build -t timeboxer .
-docker run -p 3000:3000 -v ./data:/app/data timeboxer
+docker build -t Tenet .
+docker run -p 3000:3000 -v ./data:/app/data Tenet
 ```
 
 ### Coolify
