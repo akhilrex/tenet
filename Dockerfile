@@ -26,7 +26,8 @@ RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl libc6-compat
+RUN npm install -g prisma@5.22.0
 WORKDIR /app
 
 ENV NODE_ENV production
@@ -34,6 +35,9 @@ ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+# Fix permissions for global npm/prisma
+RUN chown -R nextjs:nodejs /usr/local/lib/node_modules /usr/local/bin
 
 # Set the correct permission for prerender cache
 RUN mkdir .next

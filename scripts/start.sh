@@ -11,10 +11,8 @@ if [ ! -w "/app/db" ]; then
 fi
 
 echo "Initializing database..."
-npx prisma db push --accept-data-loss --skip-generate
-
-echo "Verifying application files..."
-ls -al /app
+# Try with --skip-generate first, fallback to standard if flag not supported
+prisma db push --accept-data-loss --skip-generate || prisma db push --accept-data-loss
 
 # Start the application
 echo "Starting application..."
