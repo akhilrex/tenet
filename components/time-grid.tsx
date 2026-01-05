@@ -9,7 +9,7 @@ import { useEffect, useState, useMemo } from "react"
 const SLOT_HEIGHT = 18 // px per 15 min (Reduced from 30)
 const MINUTES_PER_SLOT = 15
 const PIXELS_PER_MINUTE = SLOT_HEIGHT / MINUTES_PER_SLOT
-const START_HOUR = 6
+const START_HOUR = 0
 
 import {
     Dialog,
@@ -40,9 +40,9 @@ function formatTime12h(time24: string) {
 }
 
 // Generate slots
-// 06:00 to 22:00
-// 16 hours * 4 slots/hr = 64 slots + 1 for end
-const TOTAL_SLOTS = (22 - 6) * (60 / MINUTES_PER_SLOT) + 1
+// 00:00 to 24:00
+// 24 hours * 4 slots/hr = 96 slots + 1 for end
+const TOTAL_SLOTS = 24 * (60 / MINUTES_PER_SLOT)
 const SLOTS = Array.from({ length: Math.floor(TOTAL_SLOTS) }, (_, i) => {
     const totalMinutes = START_HOUR * 60 + i * MINUTES_PER_SLOT
     const h = Math.floor(totalMinutes / 60)
