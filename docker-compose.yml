@@ -1,0 +1,24 @@
+version: '3.9'
+
+services:
+  app:
+    container_name: tenet-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      # Ensure this path matches the volume mount location
+      - DATABASE_URL=file:/app/db/prod.db
+      - NODE_ENV=production
+      # Google Calendar Integration (Optional)
+      - GOOGLE_ACCESS_TOKEN=${GOOGLE_ACCESS_TOKEN}
+      # Required only if you want auto-refresh (Implementation pending)
+      # - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN}
+      # - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      # - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    volumes:
+      # Mount a local directory to persist the SQLite database
+      - ./data:/app/db

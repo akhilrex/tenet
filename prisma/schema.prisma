@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  id                 String    @id @default(uuid())
+  title              String
+  notes              String?
+  estimatedMinutes   Int       @default(30)
+  scheduledDate      String?   // YYYY-MM-DD
+  scheduledStartTime String?   // HH:MM
+  isCompleted        Boolean   @default(false)
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  
+  // Relations
+  tagId              String?
+  tag                Tag?      @relation(fields: [tagId], references: [id])
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  color     String   // Hex or predefined color name
+  createdAt DateTime @default(now())
+  tasks     Task[]
+}
