@@ -47,18 +47,30 @@ RUN chown nextjs:nodejs /app/db
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Sometimes next.js puts the server.js inside a project folder in standalone
+# This ensures it's in the root
+RUN if [ -d "./tenet" ]; then cp -r ./tenet/. ./ && rm -rf ./tenet; fi
+
 # Copy public folder
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Copy prisma schema in case migrations need to be run
+# Copy prisma schema and the script
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/start.sh ./start.sh
 
+# Install dos2unix to fix potential Windows line endings and ensure script is executable
+RUN apk add --no-cache dos2unix && \
+    dos2unix ./start.sh && \
+    chmod +x ./start.sh
+
+# The database initialization needs to happen as the same user that runs the app
+# to ensure the database file created is owned by nextjs
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT 3000
-# set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+# Use the startup script
+CMD ["./start.sh"]

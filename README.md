@@ -55,7 +55,9 @@ Tenet is designed to be easily self-hosted. The simplest way to get up and runni
     ```
     Your instance will be available at `http://localhost:3000`.
 
-    > **Note on Persistence**: By default, the SQLite database is stored inside the container. To persist data across restarts, ensure your `docker-compose.yml` mounts a volume for the database file.
+    > **Troubleshooting Permissions**: If you see "Unable to open database file", ensure the `./data` directory on your host is writable by UID 1001 (the user inside the container). You can run `chmod -R 777 ./data` as a quick fix.
+
+    > **Note on Persistence**: By default, the SQLite database is stored in the `./data` folder. This is mounted to `/app/db` inside the container.
 
 ## 🛠️ Local Development
 
