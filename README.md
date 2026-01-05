@@ -2,7 +2,7 @@
 
 **Tenet** is a modern, minimal daily planner and timeboxing application designed to help you organize your day with intention. Combining the power of a to-do list with a calendar view, Tenet allows you to schedule tasks, manage your time effectively, and sync seamlessly with Google Calendar.
 
-![Tenet App Screenshot](https://via.placeholder.com/1200x600?text=Tenet+Application+Preview)
+![Tenet App Screenshot](/screenshot.png)
 
 > **⚠️ Disclaimer**: This application has been "vibe coded" using **AntiGravity**. Code quality may be sub-optimal, but the vibes are immaculate. Use at your own risk.
 
