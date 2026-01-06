@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { createTask, updateTask, Task, createTag, getTags, Tag, pushTaskToCalendar } from "@/app/actions"
-import { Plus, Calendar } from "lucide-react"
+import { Plus, Calendar, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "sonner"
@@ -48,6 +48,7 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
     const [newTagName, setNewTagName] = useState("")
     const [newTagColor, setNewTagColor] = useState(PRESET_COLORS[0])
     const [isCreatingTag, setIsCreatingTag] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Controlled vs Uncontrolled
     const isControlled = open !== undefined
@@ -89,6 +90,7 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        setIsSubmitting(true)
         try {
             const payload = {
                 title,
@@ -117,6 +119,9 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
             }
         } catch (error) {
             console.error(error)
+            toast.error("Failed to save task")
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -128,12 +133,19 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
         }
     }, [isOpen, defaultDate, defaultTime, task])
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault()
+            handleSubmit(e as any)
+        }
+    }
+
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 {trigger || <Button><Plus className="mr-2 h-4 w-4" /> Add Task</Button>}
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md" onKeyDown={handleKeyDown}>
                 <DialogHeader>
                     <DialogTitle>{task ? "Edit Task" : "Create Task"}</DialogTitle>
                 </DialogHeader>
@@ -237,7 +249,10 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
                         )}
                         <div className="flex-1" />
                         <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
-                        <Button type="submit">{task ? "Save Changes" : "Create Task"}</Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {task ? "Save Changes" : "Create Task"}
+                        </Button>
                     </div>
                 </form>
             </DialogContent>

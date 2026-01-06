@@ -30,7 +30,9 @@ export async function getTasks(date: string) {
             OR: [
                 { scheduledDate: date },
                 { scheduledStartTime: null },
-                { scheduledDate: null }
+                { scheduledStartTime: "" },
+                { scheduledDate: null },
+                { scheduledDate: "" }
             ]
         },
         include: {

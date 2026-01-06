@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "sonner"
 import { NotificationManager } from "@/components/notification-manager"
+import { TopProgressBar } from "@/components/top-progress-bar"
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,6 +40,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <TopProgressBar />
           {children}
           <NotificationManager />
           <Toaster />

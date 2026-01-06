@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import {
     DndContext,
     DragOverlay,
@@ -16,6 +17,7 @@ import { TaskBlock } from "./task-block"
 import { UnscheduledSidebar } from "./unscheduled-sidebar"
 import { TimeGrid } from "./time-grid"
 import { TaskForm } from "./task-form"
+import { triggerLoading } from "./top-progress-bar"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "./ui/button"
 import { ListTodo } from "lucide-react"
@@ -35,6 +37,59 @@ export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: 
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
         useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
     )
+
+    const router = useRouter()
+
+    useEffect(() => {
+        const handleGlobalKeyDown = (e: KeyboardEvent) => {
+            // Ignore if in input/textarea/editable
+            if (
+                document.activeElement?.tagName === 'INPUT' ||
+                document.activeElement?.tagName === 'TEXTAREA' ||
+                (document.activeElement as HTMLElement)?.isContentEditable
+            ) {
+                return
+            }
+
+            const key = e.key.toLowerCase()
+
+            if (key === 'c') {
+                e.preventDefault()
+                setCreateFormTime("")
+                setCreateFormOpen(true)
+            } else if (key === 't') {
+                e.preventDefault()
+                triggerLoading('start')
+                router.push('/')
+            } else if (key === 'n') {
+                e.preventDefault()
+                triggerLoading('start')
+                const next = new Date(date)
+                next.setDate(next.getDate() + 1)
+                updateUrl(next)
+            } else if (key === 'p') {
+                e.preventDefault()
+                triggerLoading('start')
+                const prev = new Date(date)
+                prev.setDate(prev.getDate() - 1)
+                updateUrl(prev)
+            }
+        }
+
+        const updateUrl = (d: Date) => {
+            const y = d.getFullYear()
+            const m = String(d.getMonth() + 1).padStart(2, '0')
+            const day = String(d.getDate()).padStart(2, '0')
+            router.push(`/?date=${y}-${m}-${day}`)
+        }
+
+        window.addEventListener('keydown', handleGlobalKeyDown)
+        return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+    }, [date, router])
+
+    useEffect(() => {
+        triggerLoading('end')
+    }, [date])
 
     const handleDragStart = (event: DragStartEvent) => {
         const task = tasks.find(t => t.id === event.active.id)
@@ -70,8 +125,21 @@ export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: 
         setCreateFormOpen(true)
     }
 
-    const scheduledTasks = tasks.filter(t => t.scheduledStartTime && t.scheduledDate === dateStr)
-    const unscheduledTasks = tasks.filter(t => !t.scheduledStartTime)
+    // A task is scheduled on the grid only if it has a time AND its date matches the current view
+    const scheduledTasks = tasks.filter(t =>
+        t.scheduledStartTime &&
+        t.scheduledStartTime !== "" &&
+        t.scheduledDate === dateStr
+    )
+
+    // A task is unscheduled (sidebar) if it has no time OR no date
+    const unscheduledTasks = tasks.filter(t =>
+        !t.scheduledStartTime ||
+        t.scheduledStartTime === "" ||
+        !t.scheduledDate ||
+        t.scheduledDate === "" ||
+        t.scheduledDate !== dateStr // Also show tasks from other days that have no time
+    ).filter(t => !scheduledTasks.includes(t)) // Don't duplicate
 
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
