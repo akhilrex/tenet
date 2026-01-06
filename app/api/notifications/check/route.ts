@@ -82,7 +82,7 @@ export async function GET(req: Request) {
                 where: { externalId: `gcal-${event.id}` },
             });
 
-            if (!alreadySent) {
+            if (!alreadySent && event.start?.dateTime) {
                 const startTimeStr = new Date(event.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 for (const sub of subscriptions) {
                     await sendNotification(sub, {
