@@ -65,12 +65,16 @@ export function TaskBlock({ task, isOverlay, className, style, onClick }: TaskBl
                 <div className="flex-1 min-w-0">
                     <div className="flex flex-col gap-0.5 min-w-0">
                         <div className="truncate font-semibold">{task.title}</div>
-                        {task.scheduledStartTime && (
-                            <div className="text-[10px] opacity-60 whitespace-nowrap">
-                                {formatTimeRange(task.scheduledStartTime, task.estimatedMinutes)}
-                                <span className="ml-1 opacity-70">({task.estimatedMinutes}m)</span>
-                            </div>
-                        )}
+                        <div className="text-[10px] opacity-60 whitespace-nowrap">
+                            {task.scheduledStartTime ? (
+                                <>
+                                    {formatTimeRange(task.scheduledStartTime, task.estimatedMinutes)}
+                                    <span className="ml-1 opacity-70">({task.estimatedMinutes}m)</span>
+                                </>
+                            ) : (
+                                <span>{task.estimatedMinutes}m</span>
+                            )}
+                        </div>
                     </div>
                     {task.notes && (
                         <div className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-tight">

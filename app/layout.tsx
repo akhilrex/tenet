@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "sonner"
+import { NotificationManager } from "@/components/notification-manager"
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,6 +28,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <NotificationManager />
           <Toaster />
         </ThemeProvider>
       </body>

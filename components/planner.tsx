@@ -70,8 +70,8 @@ export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: 
         setCreateFormOpen(true)
     }
 
-    const unscheduledTasks = tasks.filter(t => !t.scheduledStartTime || t.scheduledDate !== dateStr)
     const scheduledTasks = tasks.filter(t => t.scheduledStartTime && t.scheduledDate === dateStr)
+    const unscheduledTasks = tasks.filter(t => !t.scheduledStartTime)
 
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>

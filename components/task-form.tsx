@@ -94,7 +94,8 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
                 title,
                 notes,
                 estimatedMinutes,
-                scheduledDate: scheduledDate || null,
+                // If there's no time, there's no date (global unscheduled)
+                scheduledDate: scheduledStartTime ? (scheduledDate || null) : null,
                 scheduledStartTime: scheduledStartTime || null,
                 tagId: selectedTagId
             }

@@ -29,6 +29,7 @@ export async function getTasks(date: string) {
         where: {
             OR: [
                 { scheduledDate: date },
+                { scheduledStartTime: null },
                 { scheduledDate: null }
             ]
         },
