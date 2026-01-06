@@ -11,6 +11,18 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Tenet",
   description: "Minimal Daily Planner",
+  manifest: "/manifest.json",
+  themeColor: "#0a0a0a",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Tenet",
+  },
+  icons: {
+    icon: "/tenet_logo_v2.png",
+    apple: "/tenet_logo_v2.png",
+  },
 };
 
 export default function RootLayout({

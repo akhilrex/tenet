@@ -8,14 +8,14 @@
 
 ## ✨ Features
 
-*   **Timeboxing Interface**: visually plan your day by dragging tasks onto a timeline.
-*   **Google Calendar Sync**: Two-way synchronization. View your events alongside your tasks and push tasks to your calendar with a single click.
-*   **Drag & Drop Scheduling**: Effortlessly rearrange your schedule.
-*   **Task Management**: Create tasks with titles, notes, estimated durations, and tags.
-*   **Smart Tagging**: Color-coded tags to categorize your work (e.g., Work, Personal, Deep Work).
-*   **Dark Mode**: A beautiful, system-aware dark theme for focused night sessions.
-*   **Mobile Friendly**: Responsive design with a dedicated mobile drawer for unscheduled tasks.
-*   **Privacy Focused**: Your data lives locally on your machine (via SQLite) and connects directly to your Google services.
+*   **Modern Branding**: A fresh, clock-meets-grid identity for the timeboxing pro.
+*   **Installable PWA**: Install Tenet as a standalone app on iOS, Android, or Desktop.
+*   **Native Reminders**: Get browser notifications for upcoming tasks and calendar events.
+*   **Google Calendar Sync**: View events alongside tasks and push tasks to your calendar with one click.
+*   **Persistent Backlog**: Unscheduled tasks stay in your global sidebar across all days until you box them.
+*   **Drag & Drop Scheduling**: Effortlessly plan your day on a vertical time grid.
+*   **Dark Mode**: A beautiful, system-aware premium dark theme.
+*   **Privacy Focused**: Your data lives locally on your machine (via SQLite).
 
 ## 🛠️ Tech Stack
 
@@ -61,6 +61,25 @@ Tenet is designed to be easily self-hosted. The simplest way to get up and runni
     > ```
 
     > **Note on Persistence**: By default, the SQLite database is stored in the `./data` folder. This is mounted to `/app/db` inside the container.
+
+## 📱 Progressive Web App (PWA)
+
+Tenet is fully installable! 
+
+- **iOS/Safari**: Tap Share -> "Add to Home Screen"
+- **Android/Chrome**: Tap the three dots -> "Install App"
+- **Desktop**: Click the "Install" icon in the address bar.
+
+## 🔔 Browser Notifications
+
+Tenet includes a native Web Push engine. To enable reminders:
+
+1. Generate VAPID keys: `npx web-push generate-vapid-keys --json`
+2. Add the keys and `ENABLE_NOTIFICATIONS=true` to your `.env`.
+3. Set up a Cron job to trigger the notification check every 5 minutes:
+   ```bash
+   */5 * * * * curl -X GET "https://your-tenet-url.com/api/notifications/check" -H "Authorization: Bearer YOUR_CRON_SECRET"
+   ```
 
 ## 🛠️ Local Development
 

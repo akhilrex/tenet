@@ -1,3 +1,16 @@
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+    // We can add caching logic here later if needed
+    event.respondWith(fetch(event.request));
+});
+
 self.addEventListener('push', function (event) {
     if (event.data) {
         const data = event.data.json();

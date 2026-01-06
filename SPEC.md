@@ -32,9 +32,10 @@ A minimal, self-hosted daily planner for timeboxing. Users create tasks, assign 
 - [ ] Resize scheduled task to adjust duration
 - [ ] Google Calendar events overlay (read-only, different color)
 - [ ] Unscheduled tasks list (sidebar on desktop, drawer on mobile)
-- [ ] Mark task complete (strikethrough, stays visible)
-- [ ] Date navigation (today, prev, next)
-- [ ] Mobile responsive layout
+- [x] Mark task complete (strikethrough, stays visible)
+- [x] Date navigation (today, prev, next)
+- [x] Mobile responsive layout & PWA support
+- [x] Browser Push Notifications
 
 ### Future (v0.2+)
 

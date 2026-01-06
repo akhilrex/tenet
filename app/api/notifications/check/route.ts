@@ -6,6 +6,7 @@ import { getGoogleCalendarEvents } from '@/app/actions';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
+
     if (process.env.ENABLE_NOTIFICATIONS !== 'true') {
         return NextResponse.json({ error: 'Notifications are disabled' }, { status: 403 });
     }
@@ -18,7 +19,10 @@ export async function GET(req: Request) {
 
     try {
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${y}-${m}-${d}`;
         const tenMinutesFromNow = new Date(now.getTime() + 10 * 60000);
 
         // 1. Get Tasks starting soon
