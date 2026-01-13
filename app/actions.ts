@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { addMinutes, format } from "date-fns"
 
 export type Tag = {
     id: string
@@ -142,11 +143,12 @@ export async function pushTaskToCalendar(taskId: string) {
     const auth = getOAuth2Client()
     if (!auth) throw new Error("Google Calendar not configured")
 
-    const [h, m] = task.scheduledStartTime.split(':').map(Number)
-    const startDateTime = new Date(task.scheduledDate)
-    startDateTime.setHours(h, m, 0, 0)
+    const startDateTimeString = `${task.scheduledDate}T${task.scheduledStartTime}:00`
+    const startDate = new Date(startDateTimeString)
+    const endDate = addMinutes(startDate, task.estimatedMinutes)
 
-    const endDateTime = new Date(startDateTime.getTime() + task.estimatedMinutes * 60000)
+    const startString = format(startDate, "yyyy-MM-dd'T'HH:mm:ss")
+    const endString = format(endDate, "yyyy-MM-dd'T'HH:mm:ss")
 
     try {
         const calendar = google.calendar({ version: 'v3', auth })
@@ -155,8 +157,14 @@ export async function pushTaskToCalendar(taskId: string) {
             requestBody: {
                 summary: task.title,
                 description: task.notes || undefined,
-                start: { dateTime: startDateTime.toISOString() },
-                end: { dateTime: endDateTime.toISOString() }
+                start: {
+                    dateTime: startString,
+                    timeZone: 'Asia/Kolkata'
+                },
+                end: {
+                    dateTime: endString,
+                    timeZone: 'Asia/Kolkata'
+                }
             }
         })
         return { success: true }
