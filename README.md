@@ -31,36 +31,76 @@ Built with the latest modern web technologies for performance and developer expe
 
 ## 🐳 Self-Hosting (Docker)
 
-Tenet is designed to be easily self-hosted. The simplest way to get up and running is with Docker Compose.
+The easiest way to run Tenet is using the pre-built Docker image. You don't need to build the code manually.
 
-1.  **Clone the repository**
+### Method 1: Docker Compose (Recommended)
+
+1.  **Prepare your directory**
+    Create a folder for your data to ensure your tasks and settings persist.
     ```bash
-    git clone https://github.com/akhilrex/tenet.git
-    cd tenet
+    mkdir tenet && cd tenet
+    mkdir data
     ```
 
-2.  **Configure Environment**
-    Create a `.env` file with your preferences.
-    ```bash
-    cp .env.example .env
+2.  **Create a `docker-compose.yml`**
+    Save the following content in your `tenet` directory:
+    ```yaml
+    version: '3.9'
+    services:
+      app:
+        image: ghcr.io/akhilrex/tenet:latest
+        container_name: tenet-app
+        restart: always
+        ports:
+          - "3000:3000"
+        environment:
+          - DATABASE_URL=file:/app/db/prod.db
+          # See "Environment Variables" below for more options
+        volumes:
+          - ./data:/app/db
     ```
-    *   `DATABASE_URL`: `"file:./dev.db"` (default SQLite)
-    *   **(Optional) Google Calendar Sync**:
-        *   Obtain OAuth credentials (Client ID, Secret, Refresh Token) from Google Cloud Console.
-        *   Add them to `.env`. See `GOOGLE_CALENDAR_SETUP.md` for details.
 
 3.  **Start the Container**
     ```bash
     docker-compose up -d
     ```
-    Your instance will be available at `http://localhost:3000`.
+    Your instance will be ready at `http://localhost:3000`.
 
-    > **Troubleshooting Permissions**: If you see "Unable to open database file" or "/app/db is not writable" (common on Linux/Pi), run this on your host to fix ownership:
-    > ```bash
-    > sudo chown -R 1001:1001 ./data
-    > ```
+### Method 2: Docker CLI
 
-    > **Note on Persistence**: By default, the SQLite database is stored in the `./data` folder. This is mounted to `/app/db` inside the container.
+If you prefer a single command:
+
+```bash
+docker run -d \
+  --name tenet \
+  -p 3000:3000 \
+  -v $(pwd)/data:/app/db \
+  -e DATABASE_URL="file:/app/db/prod.db" \
+  ghcr.io/akhilrex/tenet:latest
+```
+
+> **Troubleshooting Permissions**: If you encounter "Unable to open database file" errors (common on Linux/VPS), ensure the `data` directory is writable by the container user (UID 1001):
+> ```bash
+> sudo chown -R 1001:1001 ./data
+> ```
+
+## 🔑 Environment Variables
+
+Tenet is configured via environment variables. You can set these in your `docker-compose.yml` or a `.env` file. A reference file is available at `[.env.example](.env.example)`.
+
+| Variable | Description | Required | Default / Example |
+|----------|-------------|:--------:|-------------------|
+| `DATABASE_URL` | Database connection string. | ✅ | `file:/app/db/prod.db` |
+| `ENABLE_NOTIFICATIONS`| Enable browser push notifications. | ❌ | `true` |
+| `CRON_SECRET` | Secret to secure the notification cron endpoint.| ❌ | Random string |
+| `GOOGLE_CLIENT_ID` | OAuth Client ID for Calendar Sync. | ❌ | `...apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET`| OAuth Client Secret for Calendar Sync. | ❌ | - |
+| `GOOGLE_REFRESH_TOKEN`| OAuth Refresh Token for the user. | ❌ | - |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Public key for Web Push. | ❌ | (Generated via `web-push`) |
+| `VAPID_PRIVATE_KEY` | Private key for Web Push. | ❌ | (Generated via `web-push`) |
+| `VAPID_EMAIL` | Contact email for the push service. | ❌ | `mailto:admin@example.com` |
+
+**Google Calendar Note**: To sync with Google Calendar, you must set up OAuth credentials securely. See [GOOGLE_CALENDAR_SETUP.md](GOOGLE_CALENDAR_SETUP.md) for detailed instructions.
 
 ## 📱 Progressive Web App (PWA)
 
