@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { createTask, updateTask, Task, createTag, getTags, Tag, pushTaskToCalendar } from "@/app/actions"
-import { Plus, Calendar, Loader2 } from "lucide-react"
+import { createTask, updateTask, deleteTask, Task, createTag, getTags, Tag, pushTaskToCalendar } from "@/app/actions"
+import { Plus, Calendar, Loader2, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "sonner"
@@ -241,18 +241,37 @@ export function TaskForm({ task, open, onOpenChange, trigger, defaultDate, defau
                             min={15}
                         />
                     </div>
-                    <div className="flex justify-end gap-2">
-                        {task && task.scheduledDate && task.scheduledStartTime && (
-                            <Button type="button" variant="outline" size="icon" onClick={handlePushToCalendar} title="Push to Google Calendar">
-                                <Calendar className="h-4 w-4" />
+                    <div className="flex justify-between items-center gap-2">
+                        {task && (
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                onClick={async () => {
+                                    if (confirm("Are you sure you want to delete this task?")) {
+                                        await deleteTask(task.id)
+                                        setIsOpen(false)
+                                        toast.success("Task deleted")
+                                    }
+                                }}
+                                title="Delete Task"
+                            >
+                                <Trash2 className="h-4 w-4" />
                             </Button>
                         )}
-                        <div className="flex-1" />
-                        <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
-                        <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {task ? "Save Changes" : "Create Task"}
-                        </Button>
+
+                        <div className="flex gap-2 ml-auto">
+                            {task && task.scheduledDate && task.scheduledStartTime && (
+                                <Button type="button" variant="outline" size="icon" onClick={handlePushToCalendar} title="Push to Google Calendar">
+                                    <Calendar className="h-4 w-4" />
+                                </Button>
+                            )}
+                            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
+                            <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {task ? "Save Changes" : "Create Task"}
+                            </Button>
+                        </div>
                     </div>
                 </form>
             </DialogContent>
