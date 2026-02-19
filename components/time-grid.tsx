@@ -2,7 +2,7 @@
 
 import { useDroppable } from "@dnd-kit/core"
 import { cn, formatEventTimeRange } from "@/lib/utils"
-import { Task } from "@/app/actions"
+import { Task, RecurringTaskTemplate } from "@/app/actions"
 import { DraggableTaskBlock } from "./draggable-task"
 import { useEffect, useState, useMemo } from "react"
 
@@ -181,7 +181,7 @@ export function TimeSlot({ time, onClick, isPast }: { time: string, onClick?: ()
     )
 }
 
-export function TimeGrid({ tasks, events, onSlotClick, date }: { tasks: Task[], events: any[], onSlotClick?: (time: string) => void, date: Date }) {
+export function TimeGrid({ tasks, events, onSlotClick, date, templateMap }: { tasks: Task[], events: any[], onSlotClick?: (time: string) => void, date: Date, templateMap?: Map<string, RecurringTaskTemplate> }) {
     const [now, setNow] = useState<Date | null>(null)
     const [selectedEvent, setSelectedEvent] = useState<any>(null)
 
@@ -299,14 +299,15 @@ export function TimeGrid({ tasks, events, onSlotClick, date }: { tasks: Task[], 
                             </div>
                         )
                     } else {
-                        const task = item.data
+                        const task = item.data as Task
+                        const template = task.templateId ? templateMap?.get(task.templateId) : undefined
                         return (
                             <div
                                 key={task.id}
                                 className="absolute z-20 transition-all duration-300 ease-in-out"
                                 style={style}
                             >
-                                <DraggableTaskBlock task={task} className="h-full mb-0 shadow-md" />
+                                <DraggableTaskBlock task={task} recurringTemplate={template} className="h-full mb-0 shadow-md" />
                             </div>
                         )
                     }

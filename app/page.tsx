@@ -1,4 +1,4 @@
-import { getTasks, getGoogleCalendarEvents } from "@/app/actions"
+import { getTasks, getGoogleCalendarEvents, getRecurringTasksForDate } from "@/app/actions"
 import { DateNavClient } from "@/components/date-nav-client"
 import { TaskForm } from "@/components/task-form"
 import { Planner } from "@/components/planner"
@@ -24,6 +24,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ d
   const date = new Date(y, m - 1, d)
 
   const tasks = await getTasks(dateStr)
+  const recurringTasks = await getRecurringTasksForDate(dateStr)
   // Calendar events fetching might fail if token is missing, handled in action
   const events = await getGoogleCalendarEvents(dateStr)
 
@@ -36,7 +37,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ d
         </div>
       </div>
 
-      <Planner tasks={tasks} date={date} calendarEvents={events} />
+      <Planner tasks={tasks} recurringTasks={recurringTasks} date={date} calendarEvents={events} />
     </main>
   )
 }

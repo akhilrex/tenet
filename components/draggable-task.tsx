@@ -2,17 +2,20 @@
 
 import { useDraggable } from "@dnd-kit/core"
 import { TaskBlock } from "./task-block"
-import { Task, updateTask } from "@/app/actions"
+import { Task, RecurringTaskTemplate } from "@/app/actions"
 import { CSS } from "@dnd-kit/utilities"
 import { useState } from "react"
 import { TaskForm } from "./task-form"
 import { cn } from "@/lib/utils"
 
-export function DraggableTaskBlock({ task, className }: { task: Task, className?: string }) {
+export function DraggableTaskBlock({ task, recurringTemplate, className }: { task: Task, recurringTemplate?: RecurringTaskTemplate, className?: string }) {
     const [editOpen, setEditOpen] = useState(false)
+    const isVirtual = !!task.isVirtualRecurring
+
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
-        data: { task }
+        data: { task },
+        disabled: isVirtual,
     })
 
     const style = {
@@ -22,7 +25,12 @@ export function DraggableTaskBlock({ task, className }: { task: Task, className?
 
     return (
         <>
-            <div ref={setNodeRef} style={style} {...listeners} {...attributes} className={cn("mb-2 touch-none h-fit", className)}>
+            <div
+                ref={isVirtual ? undefined : setNodeRef}
+                style={isVirtual ? undefined : style}
+                {...(isVirtual ? {} : { ...listeners, ...attributes })}
+                className={cn("mb-2 touch-none h-fit", isVirtual && "cursor-pointer", className)}
+            >
                 <TaskBlock
                     task={task}
                     className="h-full"
@@ -30,7 +38,8 @@ export function DraggableTaskBlock({ task, className }: { task: Task, className?
                 />
             </div>
             <TaskForm
-                task={task}
+                task={isVirtual ? undefined : task}
+                recurringTemplate={recurringTemplate}
                 open={editOpen}
                 onOpenChange={setEditOpen}
                 trigger={<span className="hidden" />}

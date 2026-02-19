@@ -1,10 +1,10 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Task, updateTask, deleteTask } from "@/app/actions"
+import { Task, updateTask, deleteTask, materializeRecurringTask } from "@/app/actions"
 import { cn, formatTimeRange } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Trash2 } from "lucide-react"
+import { Trash2, Repeat } from "lucide-react"
 import { useState } from "react"
 import { Button } from "./ui/button"
 import { toast } from "sonner"
@@ -20,8 +20,16 @@ interface TaskBlockProps {
 export function TaskBlock({ task, isOverlay, className, style, onClick }: TaskBlockProps) {
     const [isHovered, setIsHovered] = useState(false)
 
+    const isRecurring = !!(task.isVirtualRecurring || task.recurringTemplateId)
+
     const handleComplete = async (checked: boolean) => {
-        await updateTask(task.id, { isCompleted: checked })
+        if (task.isVirtualRecurring && task.templateId && task.recurringDate) {
+            // Materialize first, then mark complete
+            const materialized = await materializeRecurringTask(task.templateId, task.recurringDate)
+            await updateTask(materialized.id, { isCompleted: checked, completedAt: checked ? new Date() : null })
+        } else {
+            await updateTask(task.id, { isCompleted: checked, completedAt: checked ? new Date() : null })
+        }
     }
 
     const handleDelete = async (e: React.MouseEvent) => {
@@ -89,6 +97,9 @@ export function TaskBlock({ task, isOverlay, className, style, onClick }: TaskBl
                             >
                                 {task.tag.name}
                             </span>
+                        )}
+                        {isRecurring && (
+                            <Repeat className="h-2.5 w-2.5 text-muted-foreground opacity-70" />
                         )}
                     </div>
                 </div>

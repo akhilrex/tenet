@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
     DndContext,
     DragOverlay,
@@ -12,7 +12,7 @@ import {
     useSensors,
     TouchSensor
 } from "@dnd-kit/core"
-import { Task, updateTask } from "@/app/actions"
+import { Task, updateTask, RecurringTaskTemplate, getRecurringTemplates, materializeRecurringTask } from "@/app/actions"
 import { TaskBlock } from "./task-block"
 import { UnscheduledSidebar } from "./unscheduled-sidebar"
 import { TimeGrid } from "./time-grid"
@@ -22,10 +22,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "./ui/button"
 import { ListTodo } from "lucide-react"
 
-export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: Date, calendarEvents: any[] }) {
+export function Planner({ tasks, recurringTasks, date, calendarEvents }: { tasks: Task[], recurringTasks: Task[], date: Date, calendarEvents: any[] }) {
     const [activeTask, setActiveTask] = useState<Task | null>(null)
     const [createFormOpen, setCreateFormOpen] = useState(false)
     const [createFormTime, setCreateFormTime] = useState("")
+    const [recurringFormOpen, setRecurringFormOpen] = useState(false)
+    const [templates, setTemplates] = useState<RecurringTaskTemplate[]>([])
 
     // Fix timezone issue: use local format matching the searchParam "YYYY-MM-DD"
     const year = date.getFullYear()
@@ -33,12 +35,29 @@ export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: 
     const day = String(date.getDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
 
+    // Load templates for editing
+    useEffect(() => {
+        getRecurringTemplates().then(setTemplates)
+    }, [recurringTasks])
+
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
         useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
     )
 
     const router = useRouter()
+
+    // Merge regular tasks and recurring virtual tasks
+    const allTasks = useMemo(() => {
+        return [...tasks, ...recurringTasks]
+    }, [tasks, recurringTasks])
+
+    // Build a lookup from templateId -> template
+    const templateMap = useMemo(() => {
+        const map = new Map<string, RecurringTaskTemplate>()
+        templates.forEach(t => map.set(t.id, t))
+        return map
+    }, [templates])
 
     useEffect(() => {
         const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -57,6 +76,9 @@ export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: 
                 e.preventDefault()
                 setCreateFormTime("")
                 setCreateFormOpen(true)
+            } else if (key === 'r') {
+                e.preventDefault()
+                setRecurringFormOpen(true)
             } else if (key === 't') {
                 e.preventDefault()
                 triggerLoading('start')
@@ -92,8 +114,8 @@ export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: 
     }, [date])
 
     const handleDragStart = (event: DragStartEvent) => {
-        const task = tasks.find(t => t.id === event.active.id)
-        if (task) setActiveTask(task)
+        const task = allTasks.find(t => t.id === event.active.id)
+        if (task && !task.isVirtualRecurring) setActiveTask(task)
     }
 
     const handleDragEnd = async (event: DragEndEvent) => {
@@ -104,6 +126,10 @@ export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: 
 
         const taskId = active.id as string
         const overId = over.id as string
+
+        // Don't allow dragging virtual recurring tasks
+        const task = allTasks.find(t => t.id === taskId)
+        if (task?.isVirtualRecurring) return
 
         if (overId.startsWith("slot-")) {
             const time = overId.replace("slot-", "")
@@ -126,20 +152,20 @@ export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: 
     }
 
     // A task is scheduled on the grid only if it has a time AND its date matches the current view
-    const scheduledTasks = tasks.filter(t =>
+    const scheduledTasks = allTasks.filter(t =>
         t.scheduledStartTime &&
         t.scheduledStartTime !== "" &&
         t.scheduledDate === dateStr
     )
 
     // A task is unscheduled (sidebar) if it has no time OR no date
-    const unscheduledTasks = tasks.filter(t =>
+    const unscheduledTasks = allTasks.filter(t =>
         !t.scheduledStartTime ||
         t.scheduledStartTime === "" ||
         !t.scheduledDate ||
         t.scheduledDate === "" ||
-        t.scheduledDate !== dateStr // Also show tasks from other days that have no time
-    ).filter(t => !scheduledTasks.includes(t)) // Don't duplicate
+        t.scheduledDate !== dateStr
+    ).filter(t => !scheduledTasks.includes(t))
 
     return (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -151,7 +177,7 @@ export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: 
                 </div>
 
                 {/* Mobile & Desktop TimeGrid */}
-                <TimeGrid tasks={scheduledTasks} events={calendarEvents} onSlotClick={handleSlotClick} date={date} />
+                <TimeGrid tasks={scheduledTasks} events={calendarEvents} onSlotClick={handleSlotClick} date={date} templateMap={templateMap} />
 
                 {/* Mobile Unscheduled Button & Sheet */}
                 <div className="fixed bottom-24 right-8 md:hidden z-40">
@@ -183,6 +209,15 @@ export function Planner({ tasks, date, calendarEvents }: { tasks: Task[], date: 
                     onOpenChange={setCreateFormOpen}
                     defaultDate={dateStr}
                     defaultTime={createFormTime}
+                    trigger={<span className="hidden" />}
+                />
+
+                {/* Recurring Task Create Form (triggered by R key) */}
+                <TaskForm
+                    open={recurringFormOpen}
+                    onOpenChange={setRecurringFormOpen}
+                    defaultDate={dateStr}
+                    defaultRecurring={true}
                     trigger={<span className="hidden" />}
                 />
             </div>
